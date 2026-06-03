@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>モダンシャーマン度診断®</title>
+<style>
+  :root {
+    --bg: #1a1410;
+    --surface: #231c16;
+    --card: #2d2218;
+    --border: #5a3e2b;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --cream: #f0e6c8;
+    --terra: #b5623a;
+    --terra-light: #d4845a;
+    --green: #4a7c59;
+    --green-light: #6aaa7a;
+    --muted: #8a7260;
+    --white: #f5ede0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', '游明朝', 'Yu Mincho', serif;
+    background: var(--bg);
+    color: var(--cream);
+    min-height: 100vh;
+    line-height: 1.8;
+  }
+
+  /* ヘッダー */
+  .hero {
+    background: linear-gradient(180deg, #0d0a07 0%, #1a1410 100%);
+    text-align: center;
+    padding: 60px 20px 40px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(201,168,76,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-block;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    padding: 4px 16px;
+    margin-bottom: 24px;
+    border-radius: 2px;
+  }
+  .hero h1 {
+    font-size: clamp(24px, 5vw, 40px);
+    color: var(--gold-light);
+    line-height: 1.4;
+    margin-bottom: 16px;
+    text-shadow: 0 0 40px rgba(201,168,76,0.3);
+  }
+  .hero .sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+  .hero .lead {
+    color: var(--cream);
+    font-size: clamp(14px, 2.5vw, 17px);
+    max-width: 600px;
+    margin: 16px auto 0;
+    opacity: 0.9;
+  }
+
+  /* 進捗バー */
+  .progress-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--card);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--terra), var(--gold));
+    border-radius: 3px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .progress-text {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* メインコンテンツ */
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 16px 60px;
+  }
+
+  /* パートタイトル */
+  .part-header {
+    text-align: center;
+    padding: 40px 0 24px;
+    display: none;
+  }
+  .part-header.active { display: block; }
+  .part-num {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    border: 1px solid var(--border);
+    padding: 3px 12px;
+    margin-bottom: 12px;
+  }
+  .part-title {
+    font-size: clamp(18px, 4vw, 26px);
+    color: var(--gold-light);
+    margin-bottom: 8px;
+  }
+  .part-desc {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* 質問カード */
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 12px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .question-card.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-num {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+  }
+  .q-text {
+    font-size: clamp(15px, 2.5vw, 17px);
+    color: var(--cream);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  /* 3択ボタン */
+  .choices {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  @media (max-width: 480px) {
+    .choices { grid-template-columns: 1fr; }
+  }
+  .choice-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    padding: 12px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s;
+    line-height: 1.4;
+  }
+  .choice-btn:hover {
+    border-color: var(--gold);
+    background: #332a1e;
+    color: var(--gold-light);
+  }
+  .choice-btn.selected {
+    background: linear-gradient(135deg, #4a3520, #3a2a15);
+    border-color: var(--gold);
+    color: var(--gold-light);
+    box-shadow: 0 0 16px rgba(201,168,76,0.2);
+  }
+  .choice-label {
+    display: block;
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 2px;
+  }
+  .choice-sub {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ナビゲーションボタン */
+  .nav-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0 0;
+    gap: 12px;
+  }
+  .btn-prev {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .btn-prev:hover { border-color: var(--muted); color: var(--cream); }
+  .btn-next {
+    background: linear-gradient(135deg, var(--terra), #8a3a20);
+    border: none;
+    color: var(--cream);
+    padding: 14px 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+    flex: 1;
+    max-width: 280px;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 20px rgba(181,98,58,0.3);
+  }
+  .btn-next:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(181,98,58,0.4); }
+  .btn-next:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* 結果画面 */
+  #result-screen {
+    display: none;
+    padding: 40px 0;
+    animation: fadeIn 0.5s ease;
+  }
+  .result-badge {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .result-emoji {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 20px rgba(201,168,76,0.4));
+  }
+  .result-score {
+    font-size: 48px;
+    color: var(--gold-light);
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .result-score-label {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+  .result-level {
+    display: inline-block;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    padding: 4px 16px;
+    margin: 16px 0 8px;
+  }
+  .result-title {
+    font-size: clamp(22px, 5vw, 34px);
+    color: var(--gold-light);
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+  .result-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    margin-bottom: 16px;
+  }
+  .result-card h3 {
+    font-size: 16px;
+    color: var(--gold);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-card p {
+    font-size: 14px;
+    color: var(--cream);
+    line-height: 1.9;
+    opacity: 0.9;
+  }
+  .result-card .next-step {
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(74,124,89,0.15);
+    border: 1px solid rgba(106,170,122,0.3);
+    border-radius: 6px;
+  }
+  .result-card .next-step p {
+    color: var(--green-light);
+  }
+
+  /* スコアバー */
+  .score-breakdown {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .score-breakdown h3 {
+    font-size: 14px;
+    color: var(--gold);
+    margin-bottom: 16px;
+    letter-spacing: 0.1em;
+  }
+  .part-score {
+    margin-bottom: 14px;
+  }
+  .part-score-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--cream);
+    margin-bottom: 6px;
+  }
+  .part-score-bar {
+    height: 8px;
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .part-score-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease;
+  }
+
+  /* CTA */
+  .cta-box {
+    background: linear-gradient(135deg, #2d1a0e, #1a0d05);
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    padding: 36px 28px;
+    text-align: center;
+    margin-top: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-box::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    height: 200px;
+    background: radial-gradient(ellipse, rgba(201,168,76,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cta-box h2 {
+    font-size: clamp(18px, 4vw, 26px);
+    color: var(--gold-light);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .cta-box p {
+    font-size: 14px;
+    color: var(--cream);
+    opacity: 0.85;
+    line-height: 1.9;
+    margin-bottom: 24px;
+  }
+  .cta-btn {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto 16px;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, var(--gold), #a07830);
+    color: #1a1410;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+    box-shadow: 0 4px 24px rgba(201,168,76,0.35);
+    line-height: 1.4;
+  }
+  .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(201,168,76,0.5); }
+  .cta-note {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* 区切り線 */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<div class="hero" id="hero">
+  <div class="hero-badge">MODERN SHAMAN DIAGNOSIS®</div>
+  <h1>あなたはどこまで<br>目覚めている？</h1>
+  <p class="sub">モダンシャーマン度診断®</p>
+  <p class="lead">
+    レイキも学んだ。チャネリングも学んだ。ヒーリングも学んだ。<br>
+    それでも自信が持てないのはなぜ？<br><br>
+    あなたが今、どの段階にいるのかを診断します。
+  </p>
+</div>
+
+<!-- 進捗バー -->
+<div class="progress-wrap" id="progress-wrap" style="display:none;">
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+  <div class="progress-text" id="progress-text">0 / 50</div>
+</div>
+
+<!-- メインコンテンツ -->
+<div class="container">
+
+  <!-- スタートボタン -->
+  <div id="start-area" style="text-align:center; padding: 48px 0;">
+    <p style="color: var(--muted); font-size: 14px; margin-bottom: 8px;">全50問 ｜ 所要時間 約5分</p>
+    <p style="color: var(--cream); font-size: 15px; margin-bottom: 32px; line-height: 1.8;">
+      各質問に「ある・少しある・ない」の<br>3段階で正直に答えてください。
+    </p>
+    <button class="btn-next" onclick="startQuiz()" style="max-width:320px; width:100%; font-size:17px; padding:18px;">
+      🔥 診断を始める
+    </button>
+  </div>
+
+  <!-- 質問エリア -->
+  <div id="quiz-area" class="hidden">
+
+    <!-- PART1 -->
+    <div class="part-header" id="part-header-1">
+      <div class="part-num">PART 1</div>
+      <div class="part-title">感覚を信頼できているか</div>
+      <div class="part-desc">あなたの直感・身体感覚の鋭さを測ります</div>
+    </div>
+
+    <!-- PART2 -->
+    <div class="part-header" id="part-header-2">
+      <div class="part-num">PART 2</div>
+      <div class="part-title">ヒーラー・チャネラー段階</div>
+      <div class="part-desc">スピリチュアルな学びと実践の深さを測ります</div>
+    </div>
+
+    <!-- PART3 -->
+    <div class="part-header" id="part-header-3">
+      <div class="part-num">PART 3</div>
+      <div class="part-title">自然とのつながり</div>
+      <div class="part-desc">自然界との共鳴の強さを測ります</div>
+    </div>
+
+    <!-- PART4 -->
+    <div class="part-header" id="part-header-4">
+      <div class="part-num">PART 4</div>
+      <div class="part-title">シャーマン資質</div>
+      <div class="part-desc">生まれ持ったシャーマンとしての素質を測ります</div>
+    </div>
+
+    <!-- PART5 -->
+    <div class="part-header" id="part-header-5">
+      <div class="part-num">PART 5</div>
+      <div class="part-title">モダンシャーマン度</div>
+      <div class="part-desc">現実とスピリットを統合する力を測ります</div>
+    </div>
+
+    <div id="questions-container"></div>
+
+    <div class="nav-area">
+      <button class="btn-prev" id="btn-prev" onclick="prevQuestion()" style="display:none;">← 戻る</button>
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()" disabled>次の質問 →</button>
+    </div>
+  </div>
+
+  <!-- 結果画面 -->
+  <div id="result-screen">
+    <div class="result-badge" id="result-badge"></div>
+    <div class="score-breakdown" id="score-breakdown"></div>
+    <div class="result-card" id="result-detail"></div>
+    <div class="cta-box">
+      <h2>あなたの感覚を「妄想」から<br>「確信」へ変える<br>7日間チャレンジ</h2>
+      <p>
+        500万かけても消えなかった「私の感覚、合ってる？」という迷いを、<br>
+        アンデス500年の叡智と、脳ではなく「肉体」で掴む圧倒的な体感で<br>
+        跡形もなく黙らせてみせます。
+      </p>
+      <a href="#" class="cta-btn">
+        ✨ モダンシャーマンへの扉<br>7Days Challenge に申し込む
+      </a>
+      <p class="cta-note">※リンクは後から差し替えます</p>
+    </div>
+  </div>
+
+  <footer style="text-align:center; padding: 32px 16px; border-top: 1px solid var(--border); margin-top: 40px;">
+    <p style="font-size: 12px; color: var(--muted); letter-spacing: 0.1em;">
+      Produced by<br>
+      <span style="color: var(--gold); font-size: 14px; letter-spacing: 0.15em;">売れるアプリ工房 Apporte</span>
+    </p>
+  </footer>
+
+  <div class="hidden">
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  // PART1 感覚を信頼できているか (Q1-10)
+  { part: 1, text: "第一印象はよく当たる" },
+  { part: 1, text: "頭より身体が先に反応する" },
+  { part: 1, text: "違和感を無視すると後悔する" },
+  { part: 1, text: "直感が現実になることがある" },
+  { part: 1, text: "「理由はないけど分かる」がある" },
+  { part: 1, text: "場所によって元気さが変わる" },
+  { part: 1, text: "人の感情を敏感に感じる" },
+  { part: 1, text: "自然の中で落ち着く" },
+  { part: 1, text: "月の影響を受ける" },
+  { part: 1, text: "動物に好かれやすい" },
+  // PART2 ヒーラー・チャネラー段階 (Q11-20)
+  { part: 2, text: "レイキやヒーリングを学んだことがある" },
+  { part: 2, text: "チャネリングを学んだことがある" },
+  { part: 2, text: "オラクルカードを使う" },
+  { part: 2, text: "シンクロが多い" },
+  { part: 2, text: "ガイドの存在を感じる" },
+  { part: 2, text: "数字のサインを受け取る" },
+  { part: 2, text: "瞑想をする" },
+  { part: 2, text: "エネルギーを感じる" },
+  { part: 2, text: "人を癒したいと思う" },
+  { part: 2, text: "人から相談される" },
+  // PART3 自然とのつながり (Q21-30)
+  { part: 3, text: "山に行くと元気になる" },
+  { part: 3, text: "海を見ると落ち着く" },
+  { part: 3, text: "木に触れたくなる" },
+  { part: 3, text: "石に惹かれる" },
+  { part: 3, text: "植物と話している感覚がある" },
+  { part: 3, text: "自然に感謝を伝える" },
+  { part: 3, text: "太陽を見ると力が湧く" },
+  { part: 3, text: "土に触れるのが好き" },
+  { part: 3, text: "風からメッセージを感じる" },
+  { part: 3, text: "自然の中で答えが来る" },
+  // PART4 シャーマン資質 (Q31-40)
+  { part: 4, text: "偶然に導かれる" },
+  { part: 4, text: "人生が見えない力に守られている" },
+  { part: 4, text: "人生の転機が多い" },
+  { part: 4, text: "大きな試練を超えてきた" },
+  { part: 4, text: "トラウマを乗り越えた経験がある" },
+  { part: 4, text: "人の変容をサポートしたい" },
+  { part: 4, text: "場の空気を変えられる" },
+  { part: 4, text: "人が安心して話し始める" },
+  { part: 4, text: "人の人生の転換点に立ち会う" },
+  { part: 4, text: "自分の使命を感じている" },
+  // PART5 モダンシャーマン度 (Q41-50)
+  { part: 5, text: "スピリチュアルを現実に活かしたい" },
+  { part: 5, text: "感じるだけでは物足りない" },
+  { part: 5, text: "現実創造に興味がある" },
+  { part: 5, text: "自然界と協働したい" },
+  { part: 5, text: "精霊やスピリットをもっと身近に感じたい" },
+  { part: 5, text: "本物の伝承を学びたい" },
+  { part: 5, text: "独学に限界を感じている" },
+  { part: 5, text: "自分の感覚を100％信頼したい" },
+  { part: 5, text: "学ぶ側から導く側になりたい" },
+  { part: 5, text: "私はシャーマンの道に呼ばれている気がする" },
+];
+
+const choices = [
+  { label: "ある", sub: "よくあてはまる", score: 5 },
+  { label: "少しある", sub: "ときどきある", score: 3 },
+  { label: "ない", sub: "あてはまらない", score: 0 },
+];
+
+const results = [
+  {
+    min: 50, max: 100,
+    emoji: "🌱",
+    level: "LEVEL 1",
+    title: "スピリチュアル探索者",
+    subtitle: "まだ「外側に答えを探す」段階",
+    state: "本、セミナー、動画、資格……。「何か自分を変えるヒントがあるはず」と、たくさんの知識を一生懸命集めてきた素晴らしい探求者です。",
+    why: "ズバリ、「頭（脳）」だけでスピリチュアルを理解しようとしていたからです。どれだけ高次元の理論を学んでも、それをキャッチする「肉体のアンテナ（身体感覚）」が閉じたままだと、エネルギーはただの知識で終わってしまいます。",
+    next: "お勉強はもう終わりです。まずは自然とつながり、「考える前に、身体が熱くなる、勝手に動く」という野生の肉体感覚を取り戻すことから始めましょう。",
+    barColor: "#6aaa7a"
+  },
+  {
+    min: 101, max: 150,
+    emoji: "✨",
+    level: "LEVEL 2",
+    title: "ハイヤーセルフ・コネクター",
+    subtitle: "内なる声とつながり始めた段階",
+    state: "瞑想、カード、ふとしたシンクロニシティなど、目に見えない「内なるサイン」をなんとなく受け取れるようになっています。",
+    why: "「受信」はできているのに、それが「自分の妄想なのか、本物のメッセージなのか」を検証する術を持っていないからです。だからいつも「気のせいかも……」という迷いが消えません。",
+    next: "あなたが繋がるべきは、ハイヤーセルフ（内側）だけではありません。山、川、風、マザーアースといった「自然界の精霊たち」と強固なパイプを繋ぐこと。外側の自然と共鳴したとき、あなたの直感は「気のせい」から「絶対的な確信」へと変わります。",
+    barColor: "#c9a84c"
+  },
+  {
+    min: 151, max: 200,
+    emoji: "🌙",
+    level: "LEVEL 3",
+    title: "ヒーラー・チャネラー",
+    subtitle: "能力はある。でも「圧倒的な自信」がない段階",
+    state: "すでにレイキやチャネリングの資格を持ち、人から相談されたり、セッションを提供できる実力があります。何十万、何百万という自己投資をされてきたはずです。",
+    why: "あなたに足りないのは「能力」ではありません。「根っこ（グラウンディング）」です。多くのヒーラーは、天（宇宙）とは繋がれても、大地（肉体とマザーアース）と繋がっていません。土台がグラグラしているから、他人のネガティブなエネルギーをもらって疲弊したり、自分の感覚が日によってブレてしまうのです。",
+    next: "チャネラーやヒーラーの時代は終わりました。これからは、自然界のエレメンタルを身に纏い、相手のエネルギーの歪みを骨格レベルで矯正していく「シャーマン」の領域へ進む時です。フワフワした癒やしを卒業し、ブレない絶対的な安定感を手に入れてください。",
+    barColor: "#b5623a"
+  },
+  {
+    min: 201, max: 230,
+    emoji: "⛰️",
+    level: "LEVEL 4",
+    title: "ナチュラルシャーマン",
+    subtitle: "生まれ持った資質が暴れ出している段階",
+    state: "人の人生の転機に立ち会うことが多かったり、場や人の空気を一瞬で変えてしまう、強烈な天性のシャーマン資質を持っています。大きな人生の試練やトラウマを乗り越えてきた方も多いはずです。",
+    why: "それは、あなたが「独学（野生のシャーマン）」だからです。どれだけ天性の才能があっても、守ってくれる「系譜（伝統のパイプ）」がないと、自分の身を削ってエネルギーを使うことになり、いつか限界が来ます。",
+    next: "本物のシャーマンには、必ず500年以上受け継がれてきた「聖なる血統（伝承の系譜）」があります。その源流のパイプに直接プラグを差し込むことで、あなたの能力は個人的なサイキックから、自然界と共同創造する「モダンシャーマン」へと完全覚醒します。",
+    barColor: "#7a5c3a"
+  },
+  {
+    min: 231, max: 250,
+    emoji: "🔥",
+    level: "LEVEL 5",
+    title: "モダンシャーマン",
+    subtitle: "現実とスピリットを結ぶ、選ばれし先駆者",
+    state: "あなたはもう、ただのヒーラーでもチャネラーでもありません。目に見えない世界と、目の前の厳しい現実をダイナミックに結びつけ、人や地球を変容させる器を持った人です。",
+    why: "本当の旅は、ここから始まるからです。シャーマニズムは「技術の習得」ではなく「生き方そのもの、魂の系譜の継承」です。",
+    next: "あなたは「学ぶ側」ではなく、次の時代を「導く側」の存在です。アンデス500年の叡智の系譜に直接繋がり、日本に本物の叡智を受け渡す「継承者」としての門を叩いてください。",
+    barColor: "#c9a84c"
+  }
+];
+
+const partNames = ["", "感覚の信頼度", "ヒーラー・チャネラー度", "自然とのつながり", "シャーマン資質", "モダンシャーマン度"];
+const partColors = ["", "#6aaa7a", "#c9a84c", "#4a7c59", "#b5623a", "#9b59b6"];
+
+let currentQ = 0;
+let answers = new Array(50).fill(null);
+let currentPart = 0;
+
+function startQuiz() {
+  document.getElementById('start-area').classList.add('hidden');
+  document.getElementById('hero').style.paddingBottom = '20px';
+  document.getElementById('quiz-area').classList.remove('hidden');
+  document.getElementById('progress-wrap').style.display = 'flex';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  const container = document.getElementById('questions-container');
+
+  // パートヘッダーの表示切り替え
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('part-header-' + i).classList.remove('active');
+  }
+  if (q.part !== currentPart) {
+    currentPart = q.part;
+    document.getElementById('part-header-' + currentPart).classList.add('active');
+  }
+
+  container.innerHTML = `
+    <div class="question-card active">
+      <div class="q-num">Q${currentQ + 1} / 50 ｜ PART ${q.part}</div>
+      <div class="q-text">${q.text}</div>
+      <div class="choices">
+        ${choices.map((c, i) => `
+          <button class="choice-btn ${answers[currentQ] === i ? 'selected' : ''}"
+                  onclick="selectAnswer(${i})">
+            <span class="choice-label">${c.label}</span>
+            <span class="choice-sub">${c.sub}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  // 進捗更新
+  const pct = ((currentQ + 1) / 50) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${currentQ + 1} / 50`;
+
+  // ボタン状態
+  document.getElementById('btn-prev').style.display = currentQ > 0 ? 'block' : 'none';
+  const btnNext = document.getElementById('btn-next');
+  btnNext.disabled = answers[currentQ] === null;
+  btnNext.textContent = currentQ === 49 ? '🔥 結果を見る' : '次の質問 →';
+}
+
+function selectAnswer(idx) {
+  answers[currentQ] = idx;
+  document.querySelectorAll('.choice-btn').forEach((b, i) => {
+    b.classList.toggle('selected', i === idx);
+  });
+  document.getElementById('btn-next').disabled = false;
+
+  // 0.4秒後に自動で次へ
+  setTimeout(() => {
+    if (currentQ < 49) nextQuestion();
+    else showResult();
+  }, 400);
+}
+
+function nextQuestion() {
+  if (answers[currentQ] === null) return;
+  if (currentQ < 49) {
+    currentQ++;
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function prevQuestion() {
+  if (currentQ > 0) {
+    currentQ--;
+    currentPart = questions[currentQ].part;
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  // スコア計算
+  const total = answers.reduce((sum, a, i) => sum + (a !== null ? choices[a].score : 0), 0);
+
+  // パート別スコア
+  const partScores = [0, 0, 0, 0, 0];
+  answers.forEach((a, i) => {
+    if (a !== null) partScores[questions[i].part - 1] += choices[a].score;
+  });
+
+  // 結果判定
+  const result = results.find(r => total >= r.min && total <= r.max) || results[results.length - 1];
+
+  document.getElementById('quiz-area').classList.add('hidden');
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'block';
+  window.scrollTo(0, 0);
+
+  // バッジ
+  document.getElementById('result-badge').innerHTML = `
+    <span class="result-emoji">${result.emoji}</span>
+    <span class="result-score">${total}<span style="font-size:20px; color:var(--muted)"> / 250</span></span>
+    <span class="result-score-label">あなたの診断スコア</span>
+    <div style="margin-top:20px;">
+      <span class="result-level">${result.level}</span>
+      <div class="result-title">${result.title}</div>
+      <div class="result-subtitle">${result.subtitle}</div>
+    </div>
+  `;
+
+  // パート別スコアバー
+  let breakdownHtml = '<h3>📊 パート別スコア</h3>';
+  for (let i = 0; i < 5; i++) {
+    const pct = (partScores[i] / 50) * 100;
+    breakdownHtml += `
+      <div class="part-score">
+        <div class="part-score-label">
+          <span>PART ${i+1} ${partNames[i+1]}</span>
+          <span style="color:var(--gold)">${partScores[i]} / 50</span>
+        </div>
+        <div class="part-score-bar">
+          <div class="part-score-fill" style="width:0%; background:${partColors[i+1]}" data-width="${pct}%"></div>
+        </div>
+      </div>
+    `;
+  }
+  document.getElementById('score-breakdown').innerHTML = breakdownHtml;
+
+  // アニメーション
+  setTimeout(() => {
+    document.querySelectorAll('.part-score-fill').forEach(el => {
+      el.style.width = el.dataset.width;
+    });
+  }, 100);
+
+  // 詳細
+  document.getElementById('result-detail').innerHTML = `
+    <h3>🌿 今のあなたの状態</h3>
+    <p>${result.state}</p>
+    <div style="margin-top:16px;">
+      <h3 style="margin-bottom:12px;">❓ なぜ自信が持てないのか</h3>
+      <p>${result.why}</p>
+    </div>
+    <div class="next-step">
+      <h3 style="color:var(--green-light); margin-bottom:8px;">⛰️ シャーマンからの次の一手</h3>
+      <p>${result.next}</p>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
